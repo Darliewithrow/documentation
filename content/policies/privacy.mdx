@@ -43,7 +43,7 @@ npm may inadvertently collect data about you if it is included in software packa
 
 When you use the `npm` command, the `npx` command, or other software to work with the npm public registry, an Enterprise registry that npm hosts, or private packages, npm logs data that might be identified to you:
 
-- a random, unique identifier, called `npm-session`, for each time you run commands like `npm install`
+- a random, unique transaction identifier, called `npm-session`, for each time you run commands like `npm install`
 
 - the names and versions of your project's dependencies, their dependencies, and so on, that come from the npm public registry, [but not of other dependencies, like Git dependencies](https://docs.npmjs.com/cli/audit)
 
@@ -52,6 +52,8 @@ When you use the `npm` command, the `npx` command, or other software to work wit
 - an `npm-in-ci` header, showing whether the command was run on a continuous integration server
 
 - the scope of the package for which you ran `npm install`, as an `npm-scope` header
+
+- an `npm-command` header, showing which npm command was run
 
 - a `referrer` header that shows the command you ran, with any file or directory paths redacted
 
