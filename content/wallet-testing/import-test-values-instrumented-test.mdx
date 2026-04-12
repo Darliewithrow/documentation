@@ -1,0 +1,87 @@
+---
+title: Import Test Values Instrumented Test
+---
+
+The `ImportTestValuesInstrumentedTest` is an Android instrumented test included in the [Reown Kotlin](https://github.com/reown-com/reown-kotlin) wallet sample. It verifies that cryptographic account values (mnemonics, private keys, and keypairs) can be imported correctly across all supported blockchain chains.
+
+## Overview
+
+The test runs on an Android device or emulator and exercises the following account delegates:
+
+| Chain    | Delegate class             | Import method                        |
+| -------- | -------------------------- | ------------------------------------ |
+| Ethereum | `EthAccountDelegate`       | `importFromMnemonic`, `privateKey`   |
+| Tron     | `TronAccountDelegate`      | `publicKey`, `secretKey`             |
+| TON      | `TONAccountDelegate`       | `importKeypair(sk, pk)`              |
+| Solana   | `SolanaAccountDelegate`    | `keyPair`                            |
+| Stacks   | `StacksAccountDelegate`    | `importedWallet`                     |
+| SUI      | `SuiAccountDelegate`       | `keypair`                            |
+
+## Test Setup
+
+Before each test case, the `@Before` method:
+
+1. Clears the `Wallet_Sample_Shared_Prefs` shared preferences to start from a clean state.
+2. Assigns the application context to every account delegate.
+3. Initialises `TONClient` with the application package name.
+
+```kotlin
+@Before
+fun setup() {
+    val app = ApplicationProvider.getApplicationContext<Application>()
+
+    app.getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE)
+        .edit()
+        .clear()
+        .commit()
+
+    EthAccountDelegate.application = app
+    TronAccountDelegate.application = app
+    TONAccountDelegate.application = app
+    SolanaAccountDelegate.application = app
+    StacksAccountDelegate.application = app
+    SuiAccountDelegate.application = app
+
+    TONClient.init(app.packageName)
+}
+```
+
+## Required Test Values
+
+The test uses a fixed set of well-known test vectors and sample keypairs. Do **not** use real production keys for these constants.
+
+| Constant              | Description                                                                 |
+| --------------------- | --------------------------------------------------------------------------- |
+| `COMMON_MNEMONIC`     | Standard BIP-39 test mnemonic (`abandon abandon … about`)                  |
+| `TEST_HEX_PRIVATE_KEY`| BIP-32 test vector private key (`000102…1f`)                                |
+| `TON_SECRET_PUBLIC`   | TON keypair in `<secret>:<public>` format (Base64-encoded)                  |
+| `SOLANA_KEYPAIR_BASE58`| Solana keypair encoded in Base58                                            |
+| `SUI_KEYPAIR`         | SUI private key in Bech32 `suiprivkey1…` format                             |
+
+## Running the Test
+
+Run the instrumented test from the Android project root with Gradle:
+
+```bash
+./gradlew :sample:wallet:connectedAndroidTest \
+    -Pandroid.testInstrumentationRunnerArguments.class=com.reown.sample.wallet.ImportTestValuesInstrumentedTest
+```
+
+Or run it directly from Android Studio by right-clicking `ImportTestValuesInstrumentedTest.kt` and selecting **Run**.
+
+## What the Test Validates
+
+`importsProvidedValuesAcrossSupportedChains` performs the following assertions for each chain:
+
+- **Ethereum** – imports from the BIP-39 mnemonic and confirms the resulting address is non-blank; also sets a raw hex private key and reads it back.
+- **TON** – imports a keypair split by `:` and confirms the friendly address is non-blank.
+- **Solana** – sets a Base58 keypair and confirms the public key half is non-blank.
+- **SUI** – sets a Bech32 keypair and confirms the derived address is non-blank.
+- **Tron** – derives the compressed public key from the ETH test private key using `web3j`, sets both keys, and confirms the Tron address is non-blank.
+- **Stacks** – imports from the BIP-39 mnemonic and confirms the mainnet address begins with `stacks:1:`.
+
+## Source Reference
+
+The full source for this test can be found at:
+
+[`sample/wallet/src/androidTest/kotlin/com/reown/sample/wallet/ImportTestValuesInstrumentedTest.kt`](https://github.com/reown-com/reown-kotlin/blob/develop/sample/wallet/src/androidTest/kotlin/com/reown/sample/wallet/ImportTestValuesInstrumentedTest.kt)
